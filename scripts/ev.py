@@ -212,7 +212,7 @@ def evaluate(model_path, test_xyz, output_dir, device="cuda"):
         "Dipole Prediction", "C", scale=1.0, manual_axis=False
     )
     axes[2].set_aspect('equal', adjustable='box')
-    out_file = os.path.join(output_path, "energy_force_hexbin.png")
+    out_file = os.path.join(output_dir, "energy_force_hexbin.png")
     fig.savefig(out_file, dpi=300)
     # plt.show()
     plt.close(fig)

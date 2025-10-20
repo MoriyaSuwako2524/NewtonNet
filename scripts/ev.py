@@ -107,7 +107,29 @@ def hexbin_on_ax(ax, x, y, xlabel, ylabel, title, panel_letter, scale=1.0, manua
     cbar = ax.figure.colorbar(hb, cax=cax)
     cbar.set_label('log$_{10}$(count)')
 
+def _prep_xy(x, y, scale=1.0, manual_axis=False):
+    """??? -> ?? -> ?? NaN/Inf -> ??????"""
+    x = np.asarray(x, dtype=float).copy() * scale
+    y = np.asarray(y, dtype=float).copy() * scale
+    x = x.ravel();
+    y = y.ravel()
+    mask = np.isfinite(x) & np.isfinite(y)
+    x = x[mask];
+    y = y[mask]
+    if manual_axis:
+        ref = x.mean()
+        x = x - ref
+        y = y - ref
+    return x, y
 
+
+def _equal_limits(x, y, pad_ratio=0.05):
+    data_min = min(x.min(), y.min())
+    data_max = max(x.max(), y.max())
+    span = data_max - data_min
+    pad = pad_ratio * span if span > 0 else 1.0
+    lo, hi = data_min - pad, data_max + pad
+    return lo, hi
 
 # ===========================
 # Evaluation

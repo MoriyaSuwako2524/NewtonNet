@@ -22,6 +22,8 @@ def get_output_by_string(key, n_features=None, activation=None):
         output_layer = ChargeOutput(n_features, activation)
     elif key == 'bec':
         output_layer = BornEffectiveChargeOutput()
+    elif key == 'dipole':   
+        output_layer = DipoleOutput(n_features, activation)
     else:
         raise NotImplementedError(f'Output type {key} is not implemented yet')
     return output_layer
@@ -29,19 +31,7 @@ def get_output_by_string(key, n_features=None, activation=None):
 def get_aggregator_by_string(key):
     if key == 'energy':
         aggregator = EnergyAggregator()
-    elif key == 'gradient_force':
-        aggregator = NullAggregator()
-    elif key == 'direct_force':
-        aggregator = NullAggregator()
-    elif key == 'hessian':
-        aggregator = NullAggregator()
-    elif key == 'virial':
-        aggregator = NullAggregator()
-    elif key == 'stress':
-        aggregator = NullAggregator()
-    elif key == 'charge':
-        aggregator = NullAggregator()
-    elif key == 'bec':
+    elif key in ['gradient_force', 'direct_force', 'hessian', 'virial', 'stress', 'charge', 'bec', 'dipole']:
         aggregator = NullAggregator()
     else:
         raise NotImplementedError(f'Aggregate type {key} is not implemented yet')
@@ -222,6 +212,28 @@ class BornEffectiveChargeOutput(SecondDerivativeProperty):
         )['BEC']
         return bec
     
+class DipoleOutput(DirectProperty):
+    """
+    Dipole moment prediction.
+    
+    Predicts atomic dipole contributions and aggregates them to molecular dipole.
+    """
+    def __init__(self, n_features, activation):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(n_features, n_features),
+            activation,
+            nn.Linear(n_features, n_features),
+            activation,
+            nn.Linear(n_features, 3),  # 3 components of dipole
+        )
+
+    def forward(self, outputs):
+        # atomic dipole contributions
+        dipole_atom = self.layers(outputs.atom_node)  # (n_nodes, 3)
+        # aggregate to molecular dipole by batch (sum over atoms)
+        dipole_mol = scatter(dipole_atom, outputs.batch, dim=0, reduce='sum')  # (n_mol, 3)
+        return dipole_mol
 
 class EnergyAggregator(nn.Module):
     def __init__(self):

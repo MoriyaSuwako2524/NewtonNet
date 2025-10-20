@@ -45,6 +45,16 @@ def get_loss_by_string(losses):
             eval_losses.append(DirectForceLoss(mode='mse', transform='cos'))
             eval_losses.append(DirectForceLoss(mode='mae', transform='norm'))
             eval_losses.append(DirectForceLoss(mode='mse', transform='norm'))
+        elif key == 'dipole':
+            main_losses.append(DipoleLoss(**kwargs))
+            eval_losses += [
+                DipoleLoss(mode='mae'),
+                DipoleLoss(mode='mse'),
+                DipoleLoss(mode='mae', transform='cos'),
+                DipoleLoss(mode='mse', transform='cos'),
+                DipoleLoss(mode='mae', transform='norm'),
+                DipoleLoss(mode='mse', transform='norm'),
+            ]
         main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
         eval_loss = lambda pred, data: {loss_fn.name: loss_fn(pred, data) for loss_fn in eval_losses}
     return main_loss, eval_loss
@@ -147,3 +157,19 @@ class DirectForceLoss(BaseLoss):
             
     def from_outputs(self, pred, data):
         return pred.direct_force, data.force
+        
+class DipoleLoss(BaseLoss):
+    '''
+    Dipole moment loss
+
+    Supports transform modes:
+        - None: direct component-wise regression
+        - 'cos': 1 - cosine similarity
+        - 'norm': dipole magnitude comparison
+    '''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = f'dipole_{self.transform+"_" if self.transform else ""}{self.mode}'
+
+    def from_outputs(self, pred, data):
+        return pred.dipole, data.dipole

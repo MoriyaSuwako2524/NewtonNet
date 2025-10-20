@@ -194,9 +194,8 @@ def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
 
         forces = torch.from_numpy(atoms.get_forces()).to(precision)
 
-
-        # === dipole ===
         dipole = None
+        print(atoms.info)
         if hasattr(atoms, "info") and "dipole" in atoms.info:
             dipole_data = atoms.info["dipole"]
             if isinstance(dipole_data, str):

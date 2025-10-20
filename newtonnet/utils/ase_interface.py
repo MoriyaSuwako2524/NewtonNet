@@ -16,7 +16,7 @@ from newtonnet.utils.pretrained_models import download_checkpoint
 ##     ML model ASE interface
 ##--------------------------------------
 class MLAseCalculator(Calculator):
-    implemented_properties = ['charges', 'bec', 'energy', 'free_energy', 'forces', 'hessian', 'stress']
+    implemented_properties = ['charges', 'bec', 'energy', 'free_energy', 'forces', 'hessian', 'stress','dipole']
     # note that the free_energy is not the Gibbs/Helmholtz free energy, but the potential energy in the ASE calculator, how confusing
 
     ### Constructor ###
@@ -78,6 +78,9 @@ class MLAseCalculator(Calculator):
         if 'stress' in self.properties:
             stress = pred.stress.cpu().detach().numpy()
             self.results['stress'] = stress[:, [0, 1, 2, 1, 0, 0], [0, 1, 2, 2, 2, 1]].squeeze()
+        if 'dipole' in self.properties:
+            dipole = pred.dipole.cpu().detach().numpy()
+            self.results['dipole'] = dipole.reshape(n_frames, 3).squeeze()
         del pred
 
     def load_model(self, model):
@@ -105,6 +108,7 @@ class MLAseCalculator(Calculator):
                     'forces': 'gradient_force',
                     'stress': 'stress',
                     'hessian': 'hessian',
+                    'dipole' : 'dipole'
                 }.get(key)
                 keys_to_keep.append(key)
                 if key in model.output_properties:

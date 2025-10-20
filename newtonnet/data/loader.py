@@ -190,13 +190,10 @@ def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
         cell[~pbc] = 0.0
 
         energy = torch.tensor(atoms.get_potential_energy(), dtype=precision) * units['energy'] / units['energy']
-        if str(units['energy']) != 'kcal/mol':
-            energy = energy * (units.eV / units['energy'])
 
-        # === 力 ===
+
         forces = torch.from_numpy(atoms.get_forces()).to(precision)
-        if str(units['energy']) != 'kcal/mol':
-            forces = forces * (units.eV / units['energy'])
+
 
         # === dipole ===
         dipole = None
@@ -210,7 +207,8 @@ def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
                 dipole_vals = None
             if dipole_vals is not None:
                 dipole = torch.tensor(dipole_vals, dtype=precision)
-        print(dipole)
+
+        # === 组装 Data ===
         data = Data()
         data.z = z.reshape(-1)
         data.pos = pos.reshape(-1, 3) * units['length']

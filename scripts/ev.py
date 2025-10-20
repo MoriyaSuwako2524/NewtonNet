@@ -171,19 +171,19 @@ def evaluate(model_path, test_xyz, output_dir, device="cuda"):
 
     # Energy (A)
     hexbin_on_ax(
-        axes[0], energies_ref.detach().numpy(), energies_pred.detach().numpy(),
+        axes[0], energies_ref, energies_pred,
         "Reference Energy (kcal/mol)", "Predicted Energy (kcal/mol)",
         "Energy Prediction", "A", scale=1.0, manual_axis=True
     )
 
     # Force (B)
     hexbin_on_ax(
-        axes[1], forces_ref.detach().numpy().ravel(), forces_pred.detach().numpy().ravel(),
+        axes[1], forces_ref.ravel(), forces_pred.ravel(),
         r"Reference Force ($kcal/mol \cdot \AA$)", r"Predicted Force ($kcal/mol \cdot \AA$)",
         "Force Prediction", "B", scale=1.0, manual_axis=False
     )
     hexbin_on_ax(
-        axes[2], dipole_ref.detach().numpy().ravel(), dipole_pred.detach().numpy().ravel(),
+        axes[2], dipole_ref.ravel(), dipole_pred.ravel(),
         r"Reference Dipole ($au$)", r"Predicted Dipole ($au$)",
         "Dipole Prediction", "C", scale=1.0, manual_axis=False
     )

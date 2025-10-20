@@ -31,7 +31,7 @@ class MolecularDataset(Dataset):
         self,
         precision: torch.dtype = torch.float,
         data_length_unit: str = 'Ang',
-        data_energy_unit: str = 'eV',
+        data_energy_unit: str = 'kcal/mol',
         **kwargs,
     ) -> None:
         self.precision = precision
@@ -91,7 +91,7 @@ class MolecularInMemoryDataset(InMemoryDataset):
         self,
         precision: torch.dtype = torch.float,
         data_length_unit: str = 'Ang',
-        data_energy_unit: str = 'eV',
+        data_energy_unit: str = 'kcal/mol',
         **kwargs,
     ) -> None:
         self.precision = precision
@@ -165,26 +165,67 @@ def parse_npz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
     return data_list
 
 def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, precision: torch.dtype, units: dict) -> List[Data]:
+    """
+    Parse .xyz or .extxyz file to torch_geometric Data list.
+
+    Supports fields:
+      - species
+      - pos
+      - forces
+      - energy
+      - dipole (if exists)
+    """
     data_list = []
     atoms_list = ase.io.read(raw_path, index=':')
 
+    # ASE 在读扩展xyz时，会自动提取 energy、forces、cell、pbc 等属性，
+    # 但不会自动解析 dipole，需要我们手动从 info 里取。
     for atoms in atoms_list:
         atoms.set_constraint()
+
         z = torch.from_numpy(atoms.get_atomic_numbers()).int()
         pos = torch.from_numpy(atoms.get_positions(wrap=True)).to(precision)
         cell = torch.from_numpy(atoms.get_cell().array).to(precision)
         pbc = torch.from_numpy(atoms.get_pbc()).bool()
         cell[~pbc] = 0.0
-        energy = torch.tensor(atoms.get_potential_energy(), dtype=precision)
-        forces = torch.from_numpy(atoms.get_forces()).to(precision)
 
+        # === 能量单位：kcal/mol ===
+        # ASE 读取能量默认是 eV，这里转成 kcal/mol
+        energy = torch.tensor(atoms.get_potential_energy(), dtype=precision) * units['energy'] / units['energy']
+        if str(units['energy']) != 'kcal/mol':
+            # 手动从 eV 转换为 kcal/mol
+            energy = energy * (units.eV / units['energy'])
+
+        # === 力 ===
+        forces = torch.from_numpy(atoms.get_forces()).to(precision)
+        if str(units['energy']) != 'kcal/mol':
+            forces = forces * (units.eV / units['energy'])
+
+        # === dipole ===
+        dipole = None
+        if hasattr(atoms, "info") and "dipole" in atoms.info:
+            dipole_data = atoms.info["dipole"]
+            if isinstance(dipole_data, str):
+                dipole_vals = [float(x) for x in dipole_data.replace(",", " ").split()]
+            elif isinstance(dipole_data, (list, tuple, np.ndarray)):
+                dipole_vals = [float(x) for x in dipole_data]
+            else:
+                dipole_vals = None
+            if dipole_vals is not None:
+                dipole = torch.tensor(dipole_vals, dtype=precision)
+
+        # === 组装 Data ===
         data = Data()
         data.z = z.reshape(-1)
         data.pos = pos.reshape(-1, 3) * units['length']
         data.cell = cell.reshape(1, 3, 3) * units['length']
-        data.energy = energy.reshape(1) * units['energy']
-        data.force = forces.reshape(-1, 3) * units['energy'] / units['length']
+        data.energy = energy.reshape(1)  # kcal/mol
+        data.force = forces.reshape(-1, 3) / units['length']  # kcal/mol per Ang
 
+        if dipole is not None:
+            data.dipole = dipole.reshape(1, 3)
+
+        # === 过滤与变换 ===
         if pre_filter is not None and not pre_filter(data):
             continue
         if pre_transform is not None:
@@ -192,6 +233,7 @@ def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
         data_list.append(data)
 
     return data_list
+
 
 
 class MolecularStatistics(nn.Module):

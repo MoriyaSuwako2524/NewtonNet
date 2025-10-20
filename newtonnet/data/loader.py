@@ -164,61 +164,71 @@ def parse_npz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
 
     return data_list
 
-def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, precision: torch.dtype, units: dict) -> List[Data]:
-    """
-    Parse .xyz or .extxyz file to torch_geometric Data list.
+from ase.data import atomic_numbers
+from ase import units as ase_units
 
-    Supports fields:
-      - species
-      - pos
-      - forces
-      - energy
-      - dipole (if exists)
-    """
+def parse_xyz(raw_path: str, pre_transform, pre_filter, precision, units):
     data_list = []
-    atoms_list = ase.io.read(raw_path, index=':')
 
-    # ASE 在读扩展xyz时，会自动提取 energy、forces、cell、pbc 等属性，
-    # 但不会自动解析 dipole，需要我们手动从 info 里取。
-    for atoms in atoms_list:
-        atoms.set_constraint()
+    with open(raw_path, 'r') as f:
+        lines = f.readlines()
 
-        z = torch.from_numpy(atoms.get_atomic_numbers()).int()
-        pos = torch.from_numpy(atoms.get_positions(wrap=True)).to(precision)
-        cell = torch.from_numpy(atoms.get_cell().array).to(precision)
-        pbc = torch.from_numpy(atoms.get_pbc()).bool()
-        cell[~pbc] = 0.0
+    i = 0
+    while i < len(lines):
+        if not lines[i].strip().isdigit():
+            i += 1
+            continue
+        natoms = int(lines[i].strip())
+        i += 1
+        header = lines[i].strip()
+        i += 1
 
-        energy = torch.tensor(atoms.get_potential_energy(), dtype=precision) * units['energy'] / units['energy']
+        # === Parse energy ===
+        energy = None
+        if "energy=" in header:
+            try:
+                energy = float(header.split("energy=")[1].split()[0])
+            except Exception:
+                pass
 
-
-        forces = torch.from_numpy(atoms.get_forces()).to(precision)
-
+        # === Parse dipole ===
         dipole = None
-        print(atoms.info)
-        if hasattr(atoms, "info") and "dipole" in atoms.info:
-            dipole_data = atoms.info["dipole"]
-            if isinstance(dipole_data, str):
-                dipole_vals = [float(x) for x in dipole_data.replace(",", " ").split()]
-            elif isinstance(dipole_data, (list, tuple, np.ndarray)):
-                dipole_vals = [float(x) for x in dipole_data]
-            else:
-                dipole_vals = None
-            if dipole_vals is not None:
-                dipole = torch.tensor(dipole_vals, dtype=precision)
+        if "dipole=" in header:
+            try:
+                dip_str = header.split("dipole=")[1].split()[0]
+                dipole = torch.tensor([float(x) for x in dip_str.split(",")], dtype=precision)
+            except Exception:
+                pass
 
-        # === 组装 Data ===
+        # === Read atomic lines ===
+        atom_lines = lines[i:i+natoms]
+        i += natoms
+
+        symbols, pos, forces = [], [], []
+        for line in atom_lines:
+            parts = line.split()
+            symbols.append(parts[0])
+            pos.append([float(x) for x in parts[1:4]])
+            forces.append([float(x) for x in parts[4:7]])
+
+        z = torch.tensor([atomic_numbers[s] for s in symbols], dtype=torch.int)
+        pos = torch.tensor(pos, dtype=precision)
+        forces = torch.tensor(forces, dtype=precision)
+
+        # === Compose Data ===
         data = Data()
-        data.z = z.reshape(-1)
-        data.pos = pos.reshape(-1, 3) * units['length']
-        data.cell = cell.reshape(1, 3, 3) * units['length']
-        data.energy = energy.reshape(1)  # kcal/mol
-        data.force = forces.reshape(-1, 3) / units['length']  # kcal/mol per Ang
-
+        data.z = z
+        data.pos = pos * units['length']
+        data.cell = torch.zeros(1, 3, 3, dtype=precision)
+        if energy is not None:
+            e_tensor = torch.tensor([energy], dtype=precision)
+            if str(units['energy']) != 'kcal/mol':
+                e_tensor = e_tensor
+            data.energy = e_tensor
+        data.force = forces
         if dipole is not None:
             data.dipole = dipole.reshape(1, 3)
 
-        # === 过滤与变换 ===
         if pre_filter is not None and not pre_filter(data):
             continue
         if pre_transform is not None:
@@ -226,6 +236,7 @@ def parse_xyz(raw_path: str, pre_transform: Callable, pre_filter: Callable, prec
         data_list.append(data)
 
     return data_list
+
 
 
 

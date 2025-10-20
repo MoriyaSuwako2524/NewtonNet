@@ -73,15 +73,40 @@ def parse_xyz(raw_path: str, precision=torch.float64):
 # ===========================
 # Helper for hexbin plotting
 # ===========================
-def hexbin_on_ax(ax, x, y, xlabel, ylabel, title, tag):
-    hb = ax.hexbin(x, y, gridsize=120, cmap='viridis', bins='log')
-    ax.set_xlabel(xlabel, fontsize=12)
-    ax.set_ylabel(ylabel, fontsize=12)
-    ax.set_title(f"({tag}) {title}", fontsize=13)
-    ax.plot([x.min(), x.max()], [x.min(), x.max()], 'r--', lw=1)
+def hexbin_on_ax(ax, x, y, xlabel, ylabel, title, panel_letter, scale=1.0, manual_axis=False):
+    """??? ax ??? hexbin + ?? + ??"""
+    x, y = _prep_xy(x, y, scale=scale, manual_axis=manual_axis)
+
+    # ?????
+    slope, intercept, r_value, _, _ = linregress(x, y)
+    mae = np.mean(np.abs(y - x))
+    rmse = np.sqrt(np.mean((y - x) ** 2))
+
+    # ????????
+    lo, hi = _equal_limits(x, y)
+    hb = ax.hexbin(x, y, gridsize=60, cmap='viridis', bins='log')
+    ax.set_xlim(lo, hi);
+    ax.set_ylim(lo, hi)
+    xs = np.linspace(lo, hi, 200)
+    ax.plot(xs, slope * xs + intercept, 'r--', linewidth=1)
     ax.set_aspect('equal', adjustable='box')
-    cb = plt.colorbar(hb, ax=ax)
-    cb.set_label("log10(N)", fontsize=11)
+
+    # ?????????
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+
+    ax.text(0.18, 0.96, f"RMSE = {rmse:.4f}\nMAE = {mae:.4f}",
+            transform=ax.transAxes, va='top', ha='left')
+    ax.text(0.02, 0.98, panel_letter, transform=ax.transAxes,
+            va='top', ha='left', fontsize=12, fontweight='bold')
+
+    # colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = ax.figure.colorbar(hb, cax=cax)
+    cbar.set_label('log$_{10}$(count)')
+
 
 
 # ===========================
@@ -140,33 +165,34 @@ def evaluate(model_path, test_xyz, output_dir, device="cuda"):
     )
     print(f"💾 Saved prediction results to {output_dir}/predictions.npz")
 
-    # --- Plot ---
-    fig, axes = plt.subplots(1, 3, figsize=(13, 5))
-    fig.subplots_adjust(wspace=0.4, left=0.07, right=0.93, bottom=0.15, top=0.9)
+    # ===== Plotting =====
+    fig, axes = plt.subplots(1, 3, figsize=(12, 5))
+    fig.subplots_adjust(wspace=0.5, right=0.92, left=0.08, top=0.9, bottom=0.15)
 
-    hexbin_on_ax(axes[0],
-        energies_ref, energies_pred,
-        "Reference Energy (kcal/mol)",
-        "Predicted Energy (kcal/mol)",
-        "Energy Prediction", "A"
-    )
-    hexbin_on_ax(axes[1],
-        forces_ref.ravel(), forces_pred.ravel(),
-        r"Reference Force ($kcal/mol\cdot\AA$)",
-        r"Predicted Force ($kcal/mol\cdot\AA$)",
-        "Force Prediction", "B"
-    )
-    hexbin_on_ax(axes[2],
-        dipole_ref.ravel(), dipole_pred.ravel(),
-        r"Reference Dipole ($e\cdot bohr$)",
-        r"Predicted Dipole ($e\cdot bohr$)",
-        "Dipole Prediction", "C"
+    # Energy (A)
+    hexbin_on_ax(
+        axes[0], energies_ref.detach().numpy(), energies_pred.detach().numpy(),
+        "Reference Energy (kcal/mol)", "Predicted Energy (kcal/mol)",
+        "Energy Prediction", "A", scale=1.0, manual_axis=True
     )
 
-    out_file = os.path.join(output_dir, "energy_force_dipole_hexbin.png")
+    # Force (B)
+    hexbin_on_ax(
+        axes[1], forces_ref.detach().numpy().ravel(), forces_pred.detach().numpy().ravel(),
+        r"Reference Force ($kcal/mol \cdot \AA$)", r"Predicted Force ($kcal/mol \cdot \AA$)",
+        "Force Prediction", "B", scale=1.0, manual_axis=False
+    )
+    hexbin_on_ax(
+        axes[2], dipole_ref.detach().numpy().ravel(), dipole_pred.detach().numpy().ravel(),
+        r"Reference Dipole ($au$)", r"Predicted Dipole ($au$)",
+        "Dipole Prediction", "C", scale=1.0, manual_axis=False
+    )
+    axes[2].set_aspect('equal', adjustable='box')
+    out_file = os.path.join(output_path, "energy_force_hexbin.png")
     fig.savefig(out_file, dpi=300)
+    # plt.show()
     plt.close(fig)
-    print(f"✅ Saved plot to {out_file}")
+    print(f"Saved plot to {out_file}")
 
 
 # ===========================

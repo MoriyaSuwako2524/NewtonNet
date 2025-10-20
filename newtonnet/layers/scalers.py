@@ -20,7 +20,7 @@ def get_scaler_by_string(key):
     elif key == 'bec':
         scaler = ScaleShift(scale=None, shift=None)
     elif key == 'dipole':
-	    scaler = ScaleShift(scale=0.1, shift=0.0)
+	    scaler = MolecularScaleShift(scale=0.1, shift=0.0)
     else:
         raise NotImplementedError(f'Scaler type {key} is not implemented yet')
     return scaler
@@ -70,3 +70,24 @@ class ScaleShift(nn.Module):
     def __repr__(self):
         return f'{self.__class__.__name__}(scale={self.scale is not None}, shift={self.shift is not None})'
     
+class MolecularScaleShift(nn.Module):
+    """
+    Scale and shift for molecular-level properties (e.g. dipole moment)
+    """
+    def __init__(self, scale=None, shift=None):
+        super().__init__()
+        self.register_parameter('scale', nn.Parameter(torch.tensor(scale if scale is not None else 1.0)))
+        self.register_parameter('shift', nn.Parameter(torch.tensor(shift if shift is not None else 0.0)))
+
+    def forward(self, output, outputs):
+        # output: [n_mol, n_prop], e.g., (8, 3)
+        return output * self.scale + self.shift
+
+    def set_scale(self, scale):
+        self.scale.data = torch.tensor(scale)
+
+    def set_shift(self, shift):
+        self.shift.data = torch.tensor(shift)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(scale={self.scale.item():.3f}, shift={self.shift.item():.3f})"

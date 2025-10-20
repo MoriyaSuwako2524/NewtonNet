@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from newtonnet.utils.ase_interface import MLAseCalculator
 from torch_geometric.data import Data
 from ase.data import atomic_numbers
+from scipy.stats import linregress
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # ===========================
 # parse_xyz (from your version)

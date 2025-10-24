@@ -19,7 +19,7 @@ force = np.load(os.path.join(path, "full_force.npy"))   # (nframes, natoms, 3)
 energy = np.load(os.path.join(path, "full_S1_energy.npy"))  # (nframes,)
 transmom = np.load(os.path.join(path, "full_transmom.npy"))  # (nframes, 3)
 types = np.load(os.path.join(path, "full_type.npy"))    # (natoms,)
-split = np.load(os.path.join(path, "1000_split.npz"))   # contains idx_train, idx_val, idx_test
+split = np.load(os.path.join(path, "2000_split.npz"))   # contains idx_train, idx_val, idx_test
 
 # convert to symbols
 symbols = [Z2symbol[int(Z)] for Z in types]
@@ -42,8 +42,8 @@ def write_xyz(filename, indices):
                 f.write(f"{atom:2s} {x:15.8f} {y:15.8f} {z:15.8f} {fx:15.8f} {fy:15.8f} {fz:15.8f}\n")
 
 # === Write train/val/test sets ===
-write_xyz(os.path.join(path, "train.xyz"), split["idx_train"])
-write_xyz(os.path.join(path, "val.xyz"), split["idx_val"])
-write_xyz(os.path.join(path, "test.xyz"), split["idx_test"])
+#write_xyz(os.path.join(path, "train/raw/train.xyz"), split["idx_train"])
+#write_xyz(os.path.join(path, "val/raw/val.xyz"), split["idx_val"])
+write_xyz(os.path.join(path, "test/raw/test.xyz"), split["idx_test"])
 
 print("✅ Done! Written: train.xyz, val.xyz, test.xyz")

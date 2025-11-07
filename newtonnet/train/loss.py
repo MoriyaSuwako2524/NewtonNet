@@ -66,25 +66,23 @@ def get_loss_by_string(losses):
 
 
     def main_loss(pred, data):
-        results = []
+        total = 0.0
         for loss_fn in main_losses:
             try:
-                out = loss_fn(pred, data)
+                loss_val = loss_fn(pred, data)
+                total += loss_val
             except Exception as e:
                 print(f"\n❌ Error in loss_fn: {loss_fn.__class__.__name__}")
-                print(f"type(pred): {type(pred)}")
-                print(f"type(data): {type(data)}")
-                # 打印 data 中每个键的类型
-                if isinstance(data, dict):
-                    for k, v in data.items():
-                        print(f"  data['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
-                # 打印预测结果中的每个键类型
+                print(f"  Exception: {e}")
+                print(f"  pred type: {type(pred)}, data type: {type(data)}")
                 if isinstance(pred, dict):
                     for k, v in pred.items():
-                        print(f"  pred['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                        print(f"  pred['{k}'] shape: {getattr(v, 'shape', None)}")
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        print(f"  data['{k}'] shape: {getattr(v, 'shape', None)}")
                 raise e
-            results.append(out)
-        return sum(results)
+        return total
 
     def eval_loss(pred, data):
         result_dict = {}
@@ -93,14 +91,13 @@ def get_loss_by_string(losses):
                 result_dict[loss_fn.name] = loss_fn(pred, data)
             except Exception as e:
                 print(f"\n❌ Error in eval loss: {loss_fn.name}")
-                print(f"type(pred): {type(pred)}")
-                print(f"type(data): {type(data)}")
-                if isinstance(data, dict):
-                    for k, v in data.items():
-                        print(f"  data['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                print(f"  Exception: {e}")
                 if isinstance(pred, dict):
                     for k, v in pred.items():
-                        print(f"  pred['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                        print(f"  pred['{k}'] shape: {getattr(v, 'shape', None)}")
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        print(f"  data['{k}'] shape: {getattr(v, 'shape', None)}")
                 raise e
         return result_dict
 

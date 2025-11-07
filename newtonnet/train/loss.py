@@ -64,10 +64,47 @@ def get_loss_by_string(losses):
             eval_losses.append(ChargeLoss(mode='mae', transform='norm'))
             eval_losses.append(ChargeLoss(mode='mse', transform='norm'))
 
-    main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
-    eval_loss = lambda pred, data: {loss_fn.name: loss_fn(pred, data) for loss_fn in eval_losses}
-    return main_loss, eval_loss
 
+    def main_loss(pred, data):
+        results = []
+        for loss_fn in main_losses:
+            try:
+                out = loss_fn(pred, data)
+            except Exception as e:
+                print(f"\n❌ Error in loss_fn: {loss_fn.__class__.__name__}")
+                print(f"type(pred): {type(pred)}")
+                print(f"type(data): {type(data)}")
+                # 打印 data 中每个键的类型
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        print(f"  data['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                # 打印预测结果中的每个键类型
+                if isinstance(pred, dict):
+                    for k, v in pred.items():
+                        print(f"  pred['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                raise e
+            results.append(out)
+        return sum(results)
+
+    def eval_loss(pred, data):
+        result_dict = {}
+        for loss_fn in eval_losses:
+            try:
+                result_dict[loss_fn.name] = loss_fn(pred, data)
+            except Exception as e:
+                print(f"\n❌ Error in eval loss: {loss_fn.name}")
+                print(f"type(pred): {type(pred)}")
+                print(f"type(data): {type(data)}")
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        print(f"  data['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                if isinstance(pred, dict):
+                    for k, v in pred.items():
+                        print(f"  pred['{k}']: {type(v)} -> {getattr(v, 'shape', None)}")
+                raise e
+        return result_dict
+
+    return main_loss, eval_loss
 
 class BaseLoss(nn.Module):
     '''

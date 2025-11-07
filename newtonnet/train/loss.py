@@ -66,6 +66,12 @@ def get_loss_by_string(losses):
 
 
     def main_loss(pred, data):
+        if isinstance(pred, dict) and isinstance(data, dict):
+            for k in pred.keys():
+                if k in data and hasattr(pred[k], "shape") and hasattr(data[k], "shape"):
+                    if pred[k].shape != data[k].shape:
+                        print(f"[⚠] Shape mismatch in key '{k}': pred {pred[k].shape} vs data {data[k].shape}")
+
         total = 0.0
         for loss_fn in main_losses:
             try:

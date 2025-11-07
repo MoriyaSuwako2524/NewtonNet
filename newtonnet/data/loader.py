@@ -219,7 +219,7 @@ def parse_xyz(raw_path: str, pre_transform, pre_filter, precision, units):
         z = torch.tensor([atomic_numbers[s] for s in symbols], dtype=torch.int)
         pos = torch.tensor(pos, dtype=precision)
         forces = torch.tensor(forces, dtype=precision)
-
+        charges = torch.tensor(charges,dtype=precision)
         # === Compose Data ===
         data = Data()
         data.z = z

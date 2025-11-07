@@ -63,9 +63,9 @@ def get_loss_by_string(losses):
             eval_losses.append(ChargeLoss(mode='mse', transform='cos'))
             eval_losses.append(ChargeLoss(mode='mae', transform='norm'))
             eval_losses.append(ChargeLoss(mode='mse', transform='norm'))
-        print(loss_fn)
-        main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
-        eval_loss = lambda pred, data: {loss_fn.name: loss_fn(pred, data) for loss_fn in eval_losses}
+
+    main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
+    eval_loss = lambda pred, data: {loss_fn.name: loss_fn(pred, data) for loss_fn in eval_losses}
     return main_loss, eval_loss
 
 

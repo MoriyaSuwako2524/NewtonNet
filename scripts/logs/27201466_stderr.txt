@@ -1,0 +1,12 @@
+/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/scripts/newtonnet_train.py", line 93, in <module>
+    main_loss, eval_loss = get_loss_by_string(settings['training'].pop('loss', None))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/loss.py", line 66, in get_loss_by_string
+    print(pred,data)
+          ^^^^
+NameError: name 'pred' is not defined

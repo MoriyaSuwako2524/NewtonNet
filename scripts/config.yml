@@ -1,13 +1,13 @@
 general:
   device: cuda    # device of the model; cpu or cuda
-  output: /scratch/moriya2524/mlp/tensornet_phbdi_tddft_transition_dipolemom_1000/    # output directory, the training will be saved in md17_model/training_n, where n is the number of the training
+  output: /scratch/moriya2524/mlp/newtonnet_phbdi_1000/    # output directory, the training will be saved in md17_model/training_n, where n is the number of the training
   precision: double    # precition of the model; double = float64, single = float= float32, or half = float16
   seed: 42    # random seed
 
 data:
-  train_root: /scratch/moriya2524/mlp/phbdi_tddft_datas/train    # path to the training data, where one or multiple xyz files are stored in the 'raw' subdirectory
-  val_root: /scratch/moriya2524/mlp/phbdi_tddft_datas/val   # path to the validation data; if not provided, the validation data will be generated from the training data
-  test_root: /scratch/moriya2524/mlp/phbdi_tddft_datas/test    # path to the test data; if not provided, the test data will be generated from the validation data
+  train_root: /scratch/moriya2524/mlp/phbdi_datas/train    # path to the training data, where one or multiple xyz files are stored in the 'raw' subdirectory
+  val_root: /scratch/moriya2524/mlp/phbdi_datas/val   # path to the validation data; if not provided, the validation data will be generated from the training data
+  test_root: /scratch/moriya2524/mlp/phbdi_datas/test    # path to the test data; if not provided, the test data will be generated from the validation data
   train_size: 1000    # number of training samples; if not provided, the training data will be the entire training dataset
   val_size: null    # number of validation samples; if not provided, the validation data will be the entire validation dataset
   test_size: null    # number of test samples; if not provided, the test data will be the entire test dataset
@@ -33,7 +33,7 @@ model:
   n_interactions: 2    # number of message passing layers
   activation: silu    # activation function
   layer_norm: False    # use layer normalization in the message passing layers
-  output_properties: ['energy', 'gradient_force',"dipole"]    # output properties of the model, energy, gradient_force, direct_force, hessian, stress
+  output_properties: ['energy', 'gradient_force',"charge"]    # output properties of the model, energy, gradient_force, direct_force, hessian, stress
 
 training:
   # wandb:    # config of the Weights & Biases logger
@@ -49,9 +49,9 @@ training:
     gradient_force:    # config of the gradient force loss
       weight: 1.0    # weight of the gradient force loss
       mode: mse    # loss mode; mse, mae, or huber
-    dipole:    # config of the gradient force loss
-      weight: 1.0    # weight of the gradient force loss
-      mode: mse    # loss mode; mse, mae, or huber
+    charge:
+      weight: 100.0
+      mode: mse
   optimizer:    # config of the optimizer
     adam:    # config of the optimizer; adam, sgd, adamw, or rmsprop
       lr: 1.0e-3    # learning rate

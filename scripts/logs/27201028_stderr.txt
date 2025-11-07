@@ -1,0 +1,39 @@
+/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+Processing...
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00,  4.76it/s]100%|██████████| 1/1 [00:00<00:00,  4.75it/s]
+Done!
+Processing...
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00,  4.11it/s]100%|██████████| 1/1 [00:00<00:00,  4.10it/s]
+Done!
+Processing...
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:02<00:00,  2.21s/it]100%|██████████| 1/1 [00:02<00:00,  2.21s/it]
+Done!
+  0%|          | 0/2000 [00:00<?, ?it/s]  0%|          | 0/2000 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/scripts/newtonnet_train.py", line 120, in <module>
+    trainer.train()
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/trainer.py", line 194, in train
+    train_log = self.run_one_epoch(self.train_generator, step=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/trainer.py", line 307, in run_one_epoch
+    main_loss = self.main_loss(preds, batch)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/loss.py", line 58, in <lambda>
+    main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
+                                        ^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/.conda/envs/newtonnet/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/loss.py", line 103, in forward
+    value_pred, value_data = self.from_outputs(pred, data)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/moriya2524/mlp/sources/newtonnet/NewtonNet/newtonnet/train/loss.py", line 175, in from_outputs
+    return pred.dipole, data.dipole
+           ^^^^^^^^^^^
+AttributeError: 'CustomOutputSet' object has no attribute 'dipole'

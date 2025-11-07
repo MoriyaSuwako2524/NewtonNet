@@ -16,7 +16,7 @@ from newtonnet.utils.pretrained_models import download_checkpoint
 ##     ML model ASE interface
 ##--------------------------------------
 class MLAseCalculator(Calculator):
-    implemented_properties = ['charges', 'bec', 'energy', 'free_energy', 'forces', 'hessian', 'stress','dipole']
+    implemented_properties = ['charge', 'bec', 'energy', 'free_energy', 'forces', 'hessian', 'stress','dipole']
     # note that the free_energy is not the Gibbs/Helmholtz free energy, but the potential energy in the ASE calculator, how confusing
 
     ### Constructor ###
@@ -57,9 +57,9 @@ class MLAseCalculator(Calculator):
         n_frames, n_atoms = len(atoms), len(atoms[0])
 
         pred = self.model(data.z, data.pos, data.cell, data.batch)
-        if 'charges' in self.properties:
+        if 'charge' in self.properties:
             charge = pred.charge.cpu().detach().numpy()
-            self.results['charges'] = charge.reshape(n_frames, n_atoms).squeeze()
+            self.results['charge'] = charge.reshape(n_frames, n_atoms).squeeze()
         if 'bec' in self.properties:
             bec = pred.bec.cpu().detach().numpy()
             self.results['bec'] = bec.reshape(n_frames, n_atoms, 3, 3).squeeze()
@@ -92,7 +92,7 @@ class MLAseCalculator(Calculator):
             self.properties = []
             for key in model.output_properties:
                 key = {
-                    'charge': 'charges',
+                    'charge': 'charge',
                     'energy': 'energy',
                     'gradient_force': 'forces',
                 }.get(key)
@@ -101,7 +101,7 @@ class MLAseCalculator(Calculator):
             keys_to_keep = ['charge', 'energy']
             for key in self.properties:
                 key = {
-                    'charges': 'charge',
+                    'charge': 'charge',
                     'bec': 'bec',
                     'energy': 'energy',
                     'free_energy': 'energy',

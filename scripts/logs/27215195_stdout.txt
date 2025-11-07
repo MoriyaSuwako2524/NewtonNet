@@ -1,0 +1,6 @@
+Data:
+load 1000 data from /scratch/moriya2524/mlp/phbdi_datas/train
+load 200 data from /scratch/moriya2524/mlp/phbdi_datas/val
+load 400 data from /scratch/moriya2524/mlp/phbdi_datas/test
+data size (train, val, test): 1000, 200, 400
+batch size (train, val, test): 8, 200, 200

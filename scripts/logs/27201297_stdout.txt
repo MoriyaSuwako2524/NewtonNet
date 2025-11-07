@@ -1,0 +1,76 @@
+Data:
+load 1000 data from /scratch/moriya2524/mlp/phbdi_datas/train
+load 200 data from /scratch/moriya2524/mlp/phbdi_datas/val
+load 400 data from /scratch/moriya2524/mlp/phbdi_datas/test
+data size (train, val, test): 1000, 200, 400
+batch size (train, val, test): 8, 200, 200
+Output directory: /scratch/moriya2524/mlp/newtonnet_phbdi_1000/training_6
+Model:
+NewtonNet(
+  (embedding_layers): EmbeddingNet(
+    (node_embedding): Embedding(119, 128, padding_idx=0)
+    (edge_embedding): EdgeEmbedding(
+      (radius_graph): RadiusGraph(r=6.0)
+      (norm): ScaledNorm(r=6.0)
+      (envelope): PolynomialCutoff(p=9)
+      (embedding): RadialBesselLayer(basis=32)
+    )
+  )
+  (interaction_layers): ModuleList(
+    (0-1): 2 x InteractionNet(
+      (message_nodepart): Sequential(
+        (0): Linear(in_features=128, out_features=128, bias=True)
+        (1): SiLU()
+        (2): Linear(in_features=128, out_features=128, bias=True)
+      )
+      (message_edgepart): Linear(in_features=32, out_features=128, bias=False)
+      (equiv_message1): Sequential(
+        (0): Linear(in_features=128, out_features=128, bias=False)
+        (1): SiLU()
+        (2): Linear(in_features=128, out_features=128, bias=False)
+      )
+      (equiv_message2): Sequential(
+        (0): Linear(in_features=128, out_features=128, bias=False)
+        (1): SiLU()
+        (2): Linear(in_features=128, out_features=128, bias=False)
+      )
+      (equiv_update): Linear(in_features=128, out_features=128, bias=False)
+    )
+  )
+  (output_layers): ModuleList(
+    (0): EnergyOutput(
+      (layers): Sequential(
+        (0): Linear(in_features=128, out_features=128, bias=True)
+        (1): SiLU()
+        (2): Linear(in_features=128, out_features=128, bias=True)
+        (3): SiLU()
+        (4): Linear(in_features=128, out_features=1, bias=True)
+      )
+    )
+    (1): GradientForceOutput()
+    (2): ChargeOutput(
+      (layers): Sequential(
+        (0): Linear(in_features=128, out_features=128, bias=True)
+        (1): SiLU()
+        (2): Linear(in_features=128, out_features=128, bias=True)
+        (3): SiLU()
+        (4): Linear(in_features=128, out_features=1, bias=True)
+      )
+    )
+  )
+  (scalers): ModuleList(
+    (0): ScaleShift(scale=True, shift=True)
+    (1): ScaleShift(scale=False, shift=False)
+    (2): ScaleShift(scale=True, shift=True)
+  )
+  (aggregators): ModuleList(
+    (0): EnergyAggregator(
+      (les): Les(
+        (ewald): Ewald(dl=2.0, sigma=1.0, remove_self_interaction=True)
+      )
+    )
+    (1-2): 2 x NullAggregator()
+  )
+)
+total trainable parameters: 320094
+

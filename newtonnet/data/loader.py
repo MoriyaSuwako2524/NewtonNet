@@ -203,13 +203,18 @@ def parse_xyz(raw_path: str, pre_transform, pre_filter, precision, units):
         # === Read atomic lines ===
         atom_lines = lines[i:i+natoms]
         i += natoms
-
-        symbols, pos, forces = [], [], []
+        charge_parse = False
+        symbols, pos, forces,charges = [], [], [],[]
+        if "charge:R:1" in header:
+            charge_parse = True
         for line in atom_lines:
             parts = line.split()
+            
             symbols.append(parts[0])
             pos.append([float(x) for x in parts[1:4]])
             forces.append([float(x) for x in parts[4:7]])
+            if charge_parse == True:
+                charges.append(float(parts[7]))
 
         z = torch.tensor([atomic_numbers[s] for s in symbols], dtype=torch.int)
         pos = torch.tensor(pos, dtype=precision)
@@ -228,6 +233,8 @@ def parse_xyz(raw_path: str, pre_transform, pre_filter, precision, units):
         data.force = forces
         if dipole is not None:
             data.dipole = dipole.reshape(1, 3)
+        if charges is not []:
+            data.charge = charges
 
         if pre_filter is not None and not pre_filter(data):
             continue

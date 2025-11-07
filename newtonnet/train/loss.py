@@ -55,6 +55,15 @@ def get_loss_by_string(losses):
                 DipoleLoss(mode='mae', transform='norm'),
                 DipoleLoss(mode='mse', transform='norm'),
             ]
+        elif key == 'charge':
+            main_losses.append(ChargeLoss(**kwargs))
+            eval_losses.append(ChargeLoss(mode='mae'))
+            eval_losses.append(ChargeLoss(mode='mse'))
+            eval_losses.append(ChargeLoss(mode='mae', transform='cos'))
+            eval_losses.append(ChargeLoss(mode='mse', transform='cos'))
+            eval_losses.append(ChargeLoss(mode='mae', transform='norm'))
+            eval_losses.append(ChargeLoss(mode='mse', transform='norm'))
+        print(loss_fn)
         main_loss = lambda pred, data: sum([loss_fn(pred, data) for loss_fn in main_losses])
         eval_loss = lambda pred, data: {loss_fn.name: loss_fn(pred, data) for loss_fn in eval_losses}
     return main_loss, eval_loss
@@ -173,3 +182,11 @@ class DipoleLoss(BaseLoss):
 
     def from_outputs(self, pred, data):
         return pred.dipole, data.dipole
+class ChargeLoss(BaseLoss):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = f'charge_{self.transform+"_" if self.transform else ""}{self.mode}'
+
+    def from_outputs(self, pred, data):
+        return pred.charge, data.charge

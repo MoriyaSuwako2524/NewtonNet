@@ -223,7 +223,7 @@ def evaluate(model_path, test_xyz, output_dir, device="cuda"):
 # Main
 # ===========================
 if __name__ == "__main__":
-    model_path = "/scratch/moriya2524/mlp/tensornet_phbdi_tddft_transition_dipolemom_1000/training_5/models/best_model.pt"
+    model_path = "/scratch/moriya2524/mlp/tensornet_phbdi_tddft_transition_dipolemom_1000/training_15/models/best_model.pt"
     test_xyz = "/scratch/moriya2524/mlp/phbdi_tddft_datas/test/raw/test.xyz"
     output_dir = "/scratch/moriya2524/mlp/tensornet_phbdi_tddft_transition_dipolemom_1000/eval_results/"
     evaluate(model_path, test_xyz, output_dir, device="cuda")
